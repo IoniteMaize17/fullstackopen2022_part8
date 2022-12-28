@@ -1,26 +1,13 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-import { gql, useMutation } from '@apollo/client'
+import { useMutation } from '@apollo/client'
 import { useState } from 'react'
-
-const CREATE_BOOK = gql`
-mutation addBook($title: String!, $published: Int!, $author: String!, $genres: [String]!) {
-  addPerson(
-    title: $title,
-    published: $published,
-    author: $author,
-    genres: $genres
-  ) {
-    title
-    published
-    author
-    id
-    genres
-  }
-}`
-
-const [ createBook ] = useMutation(CREATE_BOOK)
+import { ALL_BOOKS, ALL_AUTHORS, CREATE_BOOK, ALL_GENRES } from '../queries'
 
 const NewBook = (props) => {
+  const [ createBook ] = useMutation(CREATE_BOOK, {
+    refetchQueries: [ { query: ALL_BOOKS, variables: {
+      genre: props.pickGenre
+    }}, { query: ALL_AUTHORS }, { query: ALL_GENRES } ]
+  })
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [published, setPublished] = useState('')
@@ -33,13 +20,13 @@ const NewBook = (props) => {
 
   const submit = async (event) => {
     event.preventDefault()
-    createBook({variables: {
+    await createBook({variables: {
       title,
       author,
-      published,
+      published: Number(published),
       genres
     }})
-
+    props.switchToPage('books')
     setTitle('')
     setPublished('')
     setAuthor('')
